@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TODO List</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <script src="Node.js"></script>
+  <input type="text" onkeypress="if(event.keyCode == 13) { addTask(this); }" id="task">
+  <button type="button" onclick="addTask(document.getElementById('task'));">Add Task</button>
+  <button type="button" onclick="clearTasks();">clear all</button>
+  <h2>---------------- </h2>
+  <ul id="todoList">
+    <li ondragenter="this.parentElement.insertBefore(createGap(), event.currentTarget.nextSibling)"></li>
+  </ul>
+  <h2>---------------- <button type="button" onclick="clearDone();">clear done</button></h2>
+  <ul id="doneList">
+    <li ondragenter="this.parentElement.insertBefore(createGap(), event.currentTarget.nextSibling)"></li>
+  </ul>
+  <script onload="retrieveTasks();" src="Node.js"></script>
+</body>
+</html>
