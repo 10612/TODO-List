@@ -151,19 +151,21 @@ let TODO;
 retrieveTasks();
 
 function addTask(objective) {
-  if(!objective["check"]) {
-    const insertAt = TODO.findIndex(checkedObjective => checkedObjective["check"]);
-    if(insertAt === -1) {
-      TODO.push(objective);
+  if(objective["task"] != "") {
+    if(!objective["check"]) {
+      const insertAt = TODO.findIndex(checkedObjective => checkedObjective["check"]);
+      if(insertAt === -1) {
+        TODO.push(objective);
+      }
+      else {
+        TODO.splice(insertAt, 0, objective);
+      }
+      updateAT(insertAt, "add");
     }
     else {
-      TODO.splice(insertAt, 0, objective);
+      TODO.push(objective);
+      updateAT(-1, "add");
     }
-    updateAT(insertAt, "add");
-  }
-  else {
-    TODO.push(objective);
-    updateAT(-1, "add");
   }
 }
 
@@ -185,16 +187,45 @@ function removeTaskI(index) {
   updateAT(index, "remove");
 }
 
-function editTask() {
+function editTask(taskContainer) {
+  const edit = document.createElement("input");
+  edit.type = "text";
+  edit.value = taskContainer.innerText;
+  edit.dataset.oldValue = taskContainer.innerText;
+  edit.addEventListener("keydown", doneEdit);
+  edit.addEventListener("blur", blur);
+  taskContainer.replaceWith(edit);
+  edit.select();
+}
 
+function doneEdit(event) {
+  const taskContainer = document.createElement("p");
+  if(event.key == "Enter") {
+    taskContainer.innerText = event.target.value;
+    event.target.replaceWith(taskContainer);
+    event.target.removeEventListener("blur", blur);
+  }
+  else {
+    if(event.key == "Escape") {
+      taskContainer.innerText = event.target.dataset.oldValue;
+      event.target.replaceWith(taskContainer);
+      event.target.removeEventListener("blur", blur);
+    }
+  }
+}
+
+function blur(event) {
+  const taskContainer = document.createElement("p");
+  taskContainer.innerText = event.target.dataset.oldValue;
+  event.target.replaceWith(taskContainer);
 }
 
 function getTask(todo) {
-  return Array.prototype.slice.call(todo.parentElement.children).find(child => child.tagName == "SELECTION").innerText;
+  return Array.prototype.slice.call(todo.parentElement.children).find(child => child.tagName == "P").innerText;
 }
 
 function setTask(todo, task) {
-  Array.prototype.slice.call(todo.parentElement.children).find(child => child.tagName == "SELECTION").innerText = task;
+  Array.prototype.slice.call(todo.parentElement.children).find(child => child.tagName == "P").innerText = task;
 }
 
 function updateAT(index, updateType) {
@@ -243,17 +274,17 @@ function buttonAdd() {
   taskSource.value = "";
 }
 
-function showButtons() {
-
+function mouseEnter(todo) {
+  todo.setAttribute("id", "hover");
 }
 
-function hideButtons() {
-
+function mouseLeave(todo) {
+  todo.removeAttribute("id");
 }
 
 function createNewNode(objective) {
   let todo = document.createElement("div"), label = document.createElement("label"),
-      checkbox = document.createElement("input"), task = document.createElement("selection"),
+      checkbox = document.createElement("input"), task = document.createElement("p"),
       edit = document.createElement("button"), remove = document.createElement("button");
   checkbox.type = "checkbox";
   checkbox.classList.add("checkbox");
@@ -261,19 +292,21 @@ function createNewNode(objective) {
   checkbox.addEventListener("change", event => { change(event.target) });
   label.appendChild(checkbox);
   task.innerText = objective["task"];
+  task.classList.add("task");
   edit.textContent = "edit";
   edit.classList.add("edit");
-  edit.addEventListener("click", editTask);
+  edit.addEventListener("click", event => { editTask(event.target.previousSibling) });
   remove.textContent = "remove";
   remove.classList.add("remove");
   remove.addEventListener("click", event => { removeTaskT(event.target) });
   todo.draggable = true;
+  todo.classList.add("todo");
   todo.appendChild(label);
   todo.appendChild(task);
   todo.appendChild(edit);
   todo.appendChild(remove);
-  todo.addEventListener("mouseenter", showButtons);
-  todo.addEventListener("mouseleave", hideButtons);
+  todo.addEventListener("mouseenter", event => { mouseEnter(event.target) });
+  todo.addEventListener("mouseleave", event => { mouseLeave(event.target) });
   todo.addEventListener("dragstart", event => { event.currentTarget.id = "selected" });
   todo.addEventListener("dragenter", event => { addGap(event) });
   return todo;
