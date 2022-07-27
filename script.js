@@ -187,29 +187,36 @@ function removeTaskI(index) {
   updateAT(index, "remove");
 }
 
-function editTask(taskContainer) {
+function editTask(taskContainer, index) {
   const edit = document.createElement("input");
   edit.type = "text";
   edit.value = taskContainer.innerText;
   edit.dataset.oldValue = taskContainer.innerText;
+  edit.dataset.index = index;
   edit.addEventListener("keydown", doneEdit);
   edit.addEventListener("blur", blur);
   taskContainer.replaceWith(edit);
   edit.select();
 }
 
-function doneEdit(event) {
+function doneEdit(event, index) {
   const taskContainer = document.createElement("p");
+  taskContainer.classList.add("task");
   if(event.key == "Enter") {
-    taskContainer.innerText = event.target.value;
-    event.target.replaceWith(taskContainer);
-    event.target.removeEventListener("blur", blur);
+    if(notADuplicate(event.target.value)) {
+      TODO[event.target.dataset.index]["task"] = event.target.value;
+      taskContainer.innerText = event.target.value;
+      event.target.removeEventListener("blur", blur);
+      event.target.replaceWith(taskContainer);
+      storeTasks();
+    }
   }
   else {
     if(event.key == "Escape") {
       taskContainer.innerText = event.target.dataset.oldValue;
-      event.target.replaceWith(taskContainer);
       event.target.removeEventListener("blur", blur);
+      event.target.replaceWith(taskContainer);
+      storeTasks();
     }
   }
 }
@@ -217,15 +224,21 @@ function doneEdit(event) {
 function blur(event) {
   const taskContainer = document.createElement("p");
   taskContainer.innerText = event.target.dataset.oldValue;
+  taskContainer.classList.add("task");
   event.target.replaceWith(taskContainer);
+  storeTasks();
+}
+
+function notADuplicate(task) {
+  return TODO.filter(objective => objective["task"] == task) <= 1;
 }
 
 function getTask(todo) {
-  return Array.prototype.slice.call(todo.parentElement.children).find(child => child.tagName == "P").innerText;
+  return todo.parentElement.getElementsByTagName("P")[0].innerText;
 }
 
 function setTask(todo, task) {
-  Array.prototype.slice.call(todo.parentElement.children).find(child => child.tagName == "P").innerText = task;
+  todo.parentElement.getElementsByTagName("P")[0].innerText = task;
 }
 
 function updateAT(index, updateType) {
@@ -243,6 +256,7 @@ function updateAT(index, updateType) {
         TODOList.removeChild(TODOList.children[index]);
       break;
     case "edit":
+      editTask(TODOList.children[index].getElementsByTagName("P")[0], index);
       break;
   }
   storeTasks();
@@ -269,9 +283,13 @@ function enterAdd(event) {
 }
 
 function buttonAdd() {
-  const taskSource = document.getElementById("task");
-  addTask({ "task": taskSource.value, "check":false });
-  taskSource.value = "";
+  addTask({"task": "Enter Task", "check": false});
+  let index = TODO.findIndex(objective => objective["check"]);
+  if(index == -1) {
+    index = TODO.length;
+  }
+  index--;
+  updateAT(index, "edit");
 }
 
 function mouseEnter(todo) {
@@ -280,6 +298,15 @@ function mouseEnter(todo) {
 
 function mouseLeave(todo) {
   todo.removeAttribute("id");
+}
+
+function addGap(event) {
+  const gap = document.createElement("div"), index = TODO.findIndex(event.target);
+  gap.setAttribute("id", "gap");
+  gap.addEventListener("dragleave", event => { removeTaskI(TODO.findIndex(objective => objective === "gap")) });
+  gap.addEventListener("dragover", event => { event.preventDefault() });
+  gap.addEventListener("drop", function() {});
+
 }
 
 function createNewNode(objective) {
@@ -307,8 +334,9 @@ function createNewNode(objective) {
   todo.appendChild(remove);
   todo.addEventListener("mouseenter", event => { mouseEnter(event.target) });
   todo.addEventListener("mouseleave", event => { mouseLeave(event.target) });
-  todo.addEventListener("dragstart", event => { event.currentTarget.id = "selected" });
-  todo.addEventListener("dragenter", event => { addGap(event) });
+  todo.addEventListener("dragstart", event => { event.currentTarget.setAttribute("id", "selected");
+                                                event.dataTransfer.dropEffect = "move" });
+  todo.addEventListener("dragenter", addGap);
   return todo;
 }
 

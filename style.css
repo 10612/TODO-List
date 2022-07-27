@@ -1,9 +1,9 @@
 #TODOList {
-  
+  /* width: 37.25vw; */
 }
 
 button, input {
-   font-size: 1vw;
+  font-size: 1vw;
 }
 
 .todo {
@@ -13,6 +13,7 @@ button, input {
   font-size: 17px;
   margin-right: 61.75vw;
   width: 37.125vw;
+  border: 1px solid #00000020;
 }
 
 .checkbox {
@@ -55,4 +56,10 @@ button, input {
   word-wrap: break-word;
   overflow: visible;
   white-space: normal;
+}
+
+#gap {
+  width: 37.125vw;
+  height: 30px;
+  background-color: #dddddd60;
 }
