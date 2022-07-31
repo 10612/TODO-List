@@ -1,5 +1,5 @@
 #TODOList {
-  /* width: 37.25vw; */
+  padding-bottom: 2vw;
 }
 
 button, input {
@@ -22,7 +22,9 @@ button, input {
 
 .task {
   display: inline-block;
+  vertical-align: middle;
   width : 28vw;
+  font-size: 1.25vw;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
@@ -52,14 +54,23 @@ button, input {
   visibility: visible;
 }
 
-#hover > p {
+#hover > .task {
   word-wrap: break-word;
   overflow: visible;
   white-space: normal;
 }
 
+#selected {
+  background-color: #13a0e647;
+}
+
 #gap {
   width: 37.125vw;
   height: 30px;
+  border: 1px solid #00000020;
   background-color: #dddddd60;
+}
+
+#gap > * {
+  visibility: hidden;
 }

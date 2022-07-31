@@ -151,9 +151,9 @@ let TODO;
 retrieveTasks();
 
 function addTask(objective) {
-  if(objective["task"] != "") {
-    if(!objective["check"]) {
-      const insertAt = TODO.findIndex(checkedObjective => checkedObjective["check"]);
+  if(objective.task != "") {
+    if(!objective.check) {
+      const insertAt = TODO.findIndex(checkedObjective => checkedObjective.check);
       if(insertAt === -1) {
         TODO.push(objective);
       }
@@ -170,14 +170,14 @@ function addTask(objective) {
 }
 
 function change(checkbox) {
-  const todo = checkbox.parentElement, task = getTask(todo);
-    removeTaskT(todo);
-    addTask({ "task": task, "check": checkbox.checked });
+  const todo = checkbox.parentElement.parentElement, task = getTask(todo);
+  removeTaskT(todo);
+  addTask({ "task": task, "check": checkbox.checked });
 }
   
 
 function removeTaskT(todo) {
-  const task = getTask(todo), index = TODO.findIndex(objective => objective["task"] == task);
+  const task = getTask(todo), index = TODO.findIndex(objective => objective.task == task);
   TODO.splice(index, 1);
   updateAT(index, "remove");
 }
@@ -204,7 +204,7 @@ function doneEdit(event, index) {
   taskContainer.classList.add("task");
   if(event.key == "Enter") {
     if(notADuplicate(event.target.value)) {
-      TODO[event.target.dataset.index]["task"] = event.target.value;
+      TODO[event.target.dataset.index].task = event.target.value;
       taskContainer.innerText = event.target.value;
       event.target.removeEventListener("blur", blur);
       event.target.replaceWith(taskContainer);
@@ -230,15 +230,15 @@ function blur(event) {
 }
 
 function notADuplicate(task) {
-  return TODO.filter(objective => objective["task"] == task) <= 1;
+  return TODO.filter(objective => objective.task == task) <= 1;
 }
 
 function getTask(todo) {
-  return todo.parentElement.getElementsByTagName("P")[0].innerText;
+  return todo.getElementsByTagName("P")[0].textContent;
 }
 
 function setTask(todo, task) {
-  todo.parentElement.getElementsByTagName("P")[0].innerText = task;
+  todo.getElementsByTagName("P")[0].textContent = task;
 }
 
 function updateAT(index, updateType) {
@@ -269,7 +269,7 @@ function clearTasks() {
 }
 
 function clearChecked() {
-  const firstChecked = TODO.findIndex(checkedObjective => checkedObjective["check"]);
+  const firstChecked = TODO.findIndex(checkedObjective => checkedObjective.check);
   for(let i = TODO.length - 1; i >= firstChecked; i--) {
     removeTaskI(i)
   }
@@ -284,7 +284,7 @@ function enterAdd(event) {
 
 function buttonAdd() {
   addTask({"task": "Enter Task", "check": false});
-  let index = TODO.findIndex(objective => objective["check"]);
+  let index = TODO.findIndex(checkedObjective => checkedObjective.check);
   if(index == -1) {
     index = TODO.length;
   }
@@ -293,7 +293,9 @@ function buttonAdd() {
 }
 
 function mouseEnter(todo) {
-  todo.setAttribute("id", "hover");
+  if(todo.getAttribute("id") != "selected") {
+    todo.setAttribute("id", "hover");
+  }
 }
 
 function mouseLeave(todo) {
@@ -301,12 +303,62 @@ function mouseLeave(todo) {
 }
 
 function addGap(event) {
-  const gap = document.createElement("div"), index = TODO.findIndex(event.target);
+  if(document.getElementById("gap") === null) {
+    const gap = document.createElement("div"), text = document.createElement("p"),
+          task = getTask(event.currentTarget), index = TODO.findIndex(objective => objective.task == task);
+  text.innerText = "gap";
   gap.setAttribute("id", "gap");
-  gap.addEventListener("dragleave", event => { removeTaskI(TODO.findIndex(objective => objective === "gap")) });
+  gap.appendChild(text);
+  gap.addEventListener("dragleave", () => { removeTaskT(document.getElementById("gap")) });
   gap.addEventListener("dragover", event => { event.preventDefault() });
-  gap.addEventListener("drop", function() {});
+  gap.addEventListener("drop", drop);
+  TODO.splice(index, 0, {"task": "gap"})
+  document.getElementById("TODOList").insertBefore(gap, event.currentTarget);
+  }
+}
 
+function addEndGap() {
+  if(document.getElementById("gap") === null) {
+    const gap = document.createElement("div"), text = document.createElement("p");
+  text.innerText = "gap";
+  gap.setAttribute("id", "gap");
+  gap.appendChild(text);
+  gap.addEventListener("dragleave", () => { removeTaskT(document.getElementById("gap")) });
+  gap.addEventListener("dragover", event => { event.preventDefault() });
+  gap.addEventListener("drop", drop);
+  TODO.push({"task": "gap"})
+  document.getElementById("TODOList").appendChild(gap);
+  }
+}
+
+function drop() {
+  const gap = document.getElementById("gap"), move = document.getElementById("selected"),
+        task = getTask(move), indexMove = TODO.findIndex(objective => objective.task == task),
+        indexGap = TODO.findIndex(objective => objective.task == "gap"),
+        separationIndex = TODO.findIndex(checkedObjective => checkedObjective.check) - 1,
+        switchData = {gap, move, indexGap, indexMove};
+  if(separationIndex >= 0) {
+    if(TODO[indexMove].check) {
+      if(separationIndex <= indexGap) {
+        dropInGap(switchData);
+      }
+    }
+    else {
+      if(separationIndex >= indexGap) {
+        dropInGap(switchData);
+      }
+    }
+  }
+  else {
+    dropInGap(switchData);
+  }
+  storeTasks();
+}
+
+function dropInGap(switchData) {
+  switchData.gap.replaceWith(switchData.move);
+  TODO[switchData.indexGap] = TODO[switchData.indexMove];
+  TODO.splice(switchData.indexMove, 1);
 }
 
 function createNewNode(objective) {
@@ -315,17 +367,18 @@ function createNewNode(objective) {
       edit = document.createElement("button"), remove = document.createElement("button");
   checkbox.type = "checkbox";
   checkbox.classList.add("checkbox");
-  checkbox.checked = objective["check"];
+  checkbox.checked = objective.check;
   checkbox.addEventListener("change", event => { change(event.target) });
+  label.classList.add("checkbox");
   label.appendChild(checkbox);
-  task.innerText = objective["task"];
+  task.innerText = objective.task;
   task.classList.add("task");
   edit.textContent = "edit";
   edit.classList.add("edit");
   edit.addEventListener("click", event => { editTask(event.target.previousSibling) });
   remove.textContent = "remove";
   remove.classList.add("remove");
-  remove.addEventListener("click", event => { removeTaskT(event.target) });
+  remove.addEventListener("click", event => { removeTaskT(event.target.parentElement) });
   todo.draggable = true;
   todo.classList.add("todo");
   todo.appendChild(label);
@@ -334,8 +387,8 @@ function createNewNode(objective) {
   todo.appendChild(remove);
   todo.addEventListener("mouseenter", event => { mouseEnter(event.target) });
   todo.addEventListener("mouseleave", event => { mouseLeave(event.target) });
-  todo.addEventListener("dragstart", event => { event.currentTarget.setAttribute("id", "selected");
-                                                event.dataTransfer.dropEffect = "move" });
+  todo.addEventListener("drag", event => { event.target.setAttribute("id", "selected") })
+  todo.addEventListener("dragstart", event => { event.dataTransfer.dropEffect = "move" });
   todo.addEventListener("dragenter", addGap);
   return todo;
 }
