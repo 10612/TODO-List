@@ -1,19 +1,19 @@
-let TODO, id = 1;
+let todoArray, id = 1;
 retrieveTasks();
 
 function addTask(objective) {
   if(!objective.check) {
     const insertAt = firstCheckedIndex();
     if(insertAt === -1) {
-      TODO.push(objective);
+      todoArray.push(objective);
     }
     else {
-      TODO.splice(insertAt, 0, objective);
+      todoArray.splice(insertAt, 0, objective);
     }
     updateAT(insertAt, "add");
   }
   else {
-    TODO.push(objective);
+    todoArray.push(objective);
     updateAT(-1, "add");
   }
 }
@@ -27,12 +27,12 @@ function change(checkbox) {
 
 function removeTaskId(id) {
   const index = indexById(id);
-  TODO.splice(index, 1);
+  todoArray.splice(index, 1);
   updateAT(index, "remove");
 }
 
 function removeTaskIn(index) {
-  TODO.splice(index, 1);
+  todoArray.splice(index, 1);
   updateAT(index, "remove");
 }
 
@@ -52,7 +52,7 @@ function doneEdit(event) {
   const taskContainer = document.createElement("p");
   taskContainer.classList.add("task");
   if(event.key == "Enter") {
-    TODO[indexById(event.target.parentElement.dataset.id)].task = event.target.value;
+    todoArray[indexById(event.target.parentElement.dataset.id)].task = event.target.value;
     taskContainer.innerText = event.target.value;
     event.target.removeEventListener("blur", blur);
     event.target.replaceWith(taskContainer);
@@ -80,43 +80,43 @@ function blur(event) {
 }
 
 function todoById(id) {
-  return document.getElementById("TODOList").children[indexById(id)];
+  return document.getElementById("listContainer").children[indexById(id)];
 }
 
 function indexById(id) {
-  return TODO.findIndex(objective => objective.id == id);
+  return todoArray.findIndex(objective => objective.id == id);
 }
 
 function firstCheckedIndex() {
-  return TODO.findIndex(checkedObjective => checkedObjective.check);
+  return todoArray.findIndex(checkedObjective => checkedObjective.check);
 }
 
 function updateAT(index, updateType) {
-  const TODOList = document.getElementById("TODOList");
+  const listContainer = document.getElementById("listContainer");
   switch(updateType) {
     case "add":
       if(index !== -1) {
-        TODOList.insertBefore(createNewNode(TODO[index]), TODOList.children[index]);
+        listContainer.insertBefore(createNewNode(todoArray[index]), listContainer.children[index]);
       }
       else {
-        TODOList.appendChild(createNewNode(TODO[TODO.length - 1]));
+        listContainer.appendChild(createNewNode(todoArray[todoArray.length - 1]));
       }
       break;
     case "remove":
-        TODOList.removeChild(TODOList.children[index]);
-        if(TODO.length == 0) {
+        listContainer.removeChild(listContainer.children[index]);
+        if(todoArray.length == 0) {
           id = 1;
         }
       break;
     case "edit":
-      editTask(TODOList.children[index].getElementsByTagName("P")[0]);
+      editTask(listContainer.children[index].getElementsByTagName("P")[0]);
       break;
   }
   storeTasks();
 }
 
 function clearTasks() {
-  for(let i = TODO.length - 1; i >= 0; i--) {
+  for(let i = todoArray.length - 1; i >= 0; i--) {
     removeTaskIn(i)
   }
 }
@@ -124,7 +124,7 @@ function clearTasks() {
 function clearChecked() {
   const firstChecked = firstCheckedIndex();
   if(firstChecked >= 0) {
-    for(let i = TODO.length - 1; i >= firstChecked; i--) {
+    for(let i = todoArray.length - 1; i >= firstChecked; i--) {
       removeTaskIn(i)
     }
   }
@@ -134,7 +134,7 @@ function buttonAdd() {
   addTask({"task": "", "check": false, "id": id});
   let index = firstCheckedIndex();
   if(index == -1) {
-    index = TODO.length;
+    index = todoArray.length;
   }
   index--;
   updateAT(index, "edit");
@@ -158,8 +158,8 @@ function addGap(event) {
     gap.addEventListener("dragleave", () => { removeTaskId(0) });
     gap.addEventListener("dragover", event => { event.preventDefault() });
     gap.addEventListener("drop", drop);
-    TODO.splice(indexById(event.currentTarget.dataset.id), 0, {"id": 0});
-    document.getElementById("TODOList").insertBefore(gap, event.currentTarget);
+    todoArray.splice(indexById(event.currentTarget.dataset.id), 0, {"id": 0});
+    document.getElementById("listContainer").insertBefore(gap, event.currentTarget);
   }
 }
 
@@ -170,8 +170,8 @@ function addEndGap() {
     gap.addEventListener("dragleave", () => { removeTaskId(0) });
     gap.addEventListener("dragover", event => { event.preventDefault() });
     gap.addEventListener("drop", drop);
-    TODO.push({"id": 0});
-    document.getElementById("TODOList").appendChild(gap);
+    todoArray.push({"id": 0});
+    document.getElementById("listContainer").appendChild(gap);
   }
 }
 
@@ -181,13 +181,13 @@ function drop() {
         separationIndex = firstCheckedIndex() - 1,
         switchData = {gap, move, indexGap, indexMove};
   if(separationIndex >= 0) {
-    if(TODO[indexMove].check) {
+    if(todoArray[indexMove].check) {
       if(separationIndex <= indexGap) {
         dropInGap(switchData);
       }
       else {
         gap.remove();
-        TODO.splice(indexGap, 1);
+        todoArray.splice(indexGap, 1);
       }
     }
     else {
@@ -196,7 +196,7 @@ function drop() {
       }
       else {
         gap.remove();
-        TODO.splice(indexGap, 1);
+        todoArray.splice(indexGap, 1);
       }
     }
   }
@@ -208,8 +208,8 @@ function drop() {
 
 function dropInGap(switchData) {
   switchData.gap.replaceWith(switchData.move);
-  TODO[switchData.indexGap] = TODO[switchData.indexMove];
-  TODO.splice(switchData.indexMove, 1);
+  todoArray[switchData.indexGap] = todoArray[switchData.indexMove];
+  todoArray.splice(switchData.indexMove, 1);
 }
 
 function createNewNode(objective) {
@@ -246,21 +246,21 @@ function createNewNode(objective) {
 }
 
 function storeTasks() {
-  localStorage.setItem("TODO", JSON.stringify(TODO));
+  localStorage.setItem("todoArray", JSON.stringify(todoArray));
 }
 
 function retrieveTasks() {
-  TODO = JSON.parse(localStorage.getItem("TODO")) || [];
+  todoArray = JSON.parse(localStorage.getItem("todoArray")) || [];
   const gap = indexById(0);
   if(gap != -1) {
-    TODO.splice(gap, 1);
+    todoArray.splice(gap, 1);
   }
-  TODO.forEach(objective => { objective.id = id;
+  todoArray.forEach(objective => { objective.id = id;
                               id++; });
-  renderTODO();
+  renderTodoArray();
 }
 
-function renderTODO() {
-  const TODOList = document.getElementById("TODOList");
-  TODO.forEach(objective => { TODOList.appendChild(createNewNode(objective)) });
+function renderTodoArray() {
+  const listContainer = document.getElementById("listContainer");
+  todoArray.forEach(objective => { listContainer.appendChild(createNewNode(objective)) });
 }
