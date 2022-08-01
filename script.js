@@ -251,8 +251,12 @@ function storeTasks() {
 
 function retrieveTasks() {
   TODO = JSON.parse(localStorage.getItem("TODO")) || [];
+  const gap = indexById(0);
+  if(gap != -1) {
+    TODO.splice(gap, 1);
+  }
   TODO.forEach(objective => { objective.id = id;
-                              id++; })
+                              id++; });
   renderTODO();
 }
 
