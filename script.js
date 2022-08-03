@@ -10,11 +10,11 @@ function addTask(objective) {
     else {
       todoArray.splice(insertAt, 0, objective);
     }
-    updateAT(insertAt, "add");
+    updateAdd(insertAt);
   }
   else {
     todoArray.push(objective);
-    updateAT(-1, "add");
+    updateAdd(-1);
   }
 }
 
@@ -28,12 +28,12 @@ function change(checkbox) {
 function removeTaskId(id) {
   const index = indexById(id);
   todoArray.splice(index, 1);
-  updateAT(index, "remove");
+  updateRemove(index);
 }
 
 function removeTaskIn(index) {
   todoArray.splice(index, 1);
-  updateAT(index, "remove");
+  updateRemove(index);
 }
 
 function editTask(taskContainer) {
@@ -51,7 +51,7 @@ function editTask(taskContainer) {
 function doneEdit(event) {
   const taskContainer = document.createElement("p");
   taskContainer.classList.add("task");
-  if(event.key == "Enter") {
+  if(event.key === "Enter") {
     todoArray[indexById(event.target.parentElement.dataset.id)].task = event.target.value;
     taskContainer.innerText = event.target.value;
     event.target.removeEventListener("blur", blur);
@@ -60,7 +60,7 @@ function doneEdit(event) {
     storeTasks();
   }
   else {
-    if(event.key == "Escape") {
+    if(event.key === "Escape") {
       taskContainer.innerText = event.target.dataset.oldValue;
       event.target.removeEventListener("blur", blur);
       event.target.replaceWith(taskContainer);
@@ -84,33 +84,29 @@ function todoById(id) {
 }
 
 function indexById(id) {
-  return todoArray.findIndex(objective => objective.id == id);
+  return todoArray.findIndex(objective => objective.id === parseInt(id));
 }
 
 function firstCheckedIndex() {
   return todoArray.findIndex(checkedObjective => checkedObjective.check);
 }
 
-function updateAT(index, updateType) {
+function updateAdd(index) {
   const listContainer = document.getElementById("listContainer");
-  switch(updateType) {
-    case "add":
-      if(index !== -1) {
-        listContainer.insertBefore(createNewNode(todoArray[index]), listContainer.children[index]);
-      }
-      else {
-        listContainer.appendChild(createNewNode(todoArray[todoArray.length - 1]));
-      }
-      break;
-    case "remove":
-        listContainer.removeChild(listContainer.children[index]);
-        if(todoArray.length == 0) {
-          id = 1;
-        }
-      break;
-    case "edit":
-      editTask(listContainer.children[index].getElementsByTagName("P")[0]);
-      break;
+  if(index !== -1) {
+    listContainer.insertBefore(createNewNode(todoArray[index]), listContainer.children[index]);
+  }
+  else {
+    listContainer.appendChild(createNewNode(todoArray[todoArray.length - 1]));
+  }
+  storeTasks();
+}
+
+function updateRemove(index) {
+  const listContainer = document.getElementById("listContainer");
+  listContainer.removeChild(listContainer.children[index]);
+  if(todoArray.length === 0) {
+    id = 1;
   }
   storeTasks();
 }
@@ -131,18 +127,20 @@ function clearChecked() {
 }
 
 function buttonAdd() {
-  addTask({"task": "", "check": false, "id": id});
+  const listContainer = document.getElementById("listContainer");
   let index = firstCheckedIndex();
-  if(index == -1) {
+  addTask({"task": "", "check": false, "id": id});
+  if(index === -1) {
     index = todoArray.length;
   }
   index--;
-  updateAT(index, "edit");
+  editTask(listContainer.children[index].getElementsByTagName("P")[0]);
+  storeTasks();
   id++;
 }
 
 function mouseEnter(todo) {
-  if(todo.getAttribute("id") != "selected") {
+  if(todo.getAttribute("id") !== "selected") {
     todo.setAttribute("id", "hover");
   }
 }
@@ -153,11 +151,7 @@ function mouseLeave(todo) {
 
 function addGap(event) {
   if(document.getElementById("gap") === null) {
-    const gap = document.createElement("div");
-    gap.setAttribute("id", "gap");
-    gap.addEventListener("dragleave", () => { removeTaskId(0) });
-    gap.addEventListener("dragover", event => { event.preventDefault() });
-    gap.addEventListener("drop", drop);
+    const gap = makeGap();
     todoArray.splice(indexById(event.currentTarget.dataset.id), 0, {"id": 0});
     document.getElementById("listContainer").insertBefore(gap, event.currentTarget);
   }
@@ -165,18 +159,29 @@ function addGap(event) {
 
 function addEndGap() {
   if(document.getElementById("gap") === null) {
-    const gap = document.createElement("div");
-    gap.setAttribute("id", "gap");
-    gap.addEventListener("dragleave", () => { removeTaskId(0) });
-    gap.addEventListener("dragover", event => { event.preventDefault() });
-    gap.addEventListener("drop", drop);
+    const gap = makeGap();
     todoArray.push({"id": 0});
     document.getElementById("listContainer").appendChild(gap);
   }
 }
 
+function makeGap() {
+  const gap = document.createElement("div");
+  gap.setAttribute("id", "gap");
+  gap.addEventListener("dragleave", removeGap);
+  gap.addEventListener("dragover", event => { event.preventDefault() });
+  gap.addEventListener("drop", drop);
+  return gap;
+}
+
+function removeGap(iDoNothing) {
+  removeTaskId(0);
+}
+
 function drop() {
-  const gap = document.getElementById("gap"), move = document.getElementById("selected"),
+  // Drops the dragged element in the gap
+  const gap = document.getElementById("gap"),
+        move = document.getElementById("selected"),
         indexMove = indexById(move.dataset.id), indexGap = indexById(0),
         separationIndex = firstCheckedIndex() - 1,
         switchData = {gap, move, indexGap, indexMove};
@@ -251,8 +256,8 @@ function storeTasks() {
 
 function retrieveTasks() {
   todoArray = JSON.parse(localStorage.getItem("todoArray")) || [];
-  const gap = indexById(0);
-  if(gap != -1) {
+  const gapIndex = indexById(0);
+  if(gapIndex !== -1) {
     todoArray.splice(gap, 1);
   }
   todoArray.forEach(objective => { objective.id = id;
