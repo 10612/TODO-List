@@ -18,20 +18,20 @@ function addTask(objective) {
   }
 }
 
-function change(checkbox) {
+function changeCheck(checkbox) {
   const todo = checkbox.parentElement.parentElement;
-  removeTaskId(todo.dataset.id);
+  removeTodoId(todo.dataset.id);
   addTask({ "task": todo.getElementsByTagName("P")[0].textContent, "check": checkbox.checked, "id": todo.dataset.id });
 }
   
 
-function removeTaskId(id) {
-  const index = indexById(id);
+function removeTodoId(id) {
+  const index = getIndexById(id);
   todoArray.splice(index, 1);
   updateRemove(index);
 }
 
-function removeTaskIn(index) {
+function removeTodoIn(index) {
   todoArray.splice(index, 1);
   updateRemove(index);
 }
@@ -52,7 +52,7 @@ function doneEdit(event) {
   const taskContainer = document.createElement("p");
   taskContainer.classList.add("task");
   if(event.key === "Enter") {
-    todoArray[indexById(event.target.parentElement.dataset.id)].task = event.target.value;
+    todoArray[getIndexById(event.target.parentElement.dataset.id)].task = event.target.value;
     taskContainer.innerText = event.target.value;
     event.target.removeEventListener("blur", blur);
     event.target.replaceWith(taskContainer);
@@ -79,11 +79,7 @@ function blur(event) {
     storeTasks();
 }
 
-function todoById(id) {
-  return document.getElementById("listContainer").children[indexById(id)];
-}
-
-function indexById(id) {
+function getIndexById(id) {
   return todoArray.findIndex(objective => objective.id === parseInt(id));
 }
 
@@ -113,7 +109,7 @@ function updateRemove(index) {
 
 function clearTasks() {
   for(let i = todoArray.length - 1; i >= 0; i--) {
-    removeTaskIn(i)
+    removeTodoIn(i)
   }
 }
 
@@ -121,7 +117,7 @@ function clearChecked() {
   const firstChecked = firstCheckedIndex();
   if(firstChecked >= 0) {
     for(let i = todoArray.length - 1; i >= firstChecked; i--) {
-      removeTaskIn(i)
+      removeTodoIn(i)
     }
   }
 }
@@ -152,7 +148,7 @@ function mouseLeave(todo) {
 function addGap(event) {
   if(document.getElementById("gap") === null) {
     const gap = makeGap();
-    todoArray.splice(indexById(event.currentTarget.dataset.id), 0, {"id": 0});
+    todoArray.splice(getIndexById(event.currentTarget.dataset.id), 0, {"id": 0});
     document.getElementById("listContainer").insertBefore(gap, event.currentTarget);
   }
 }
@@ -168,21 +164,16 @@ function addEndGap() {
 function makeGap() {
   const gap = document.createElement("div");
   gap.setAttribute("id", "gap");
-  gap.addEventListener("dragleave", removeGap);
+  gap.addEventListener("dragleave", () => { removeTodoId(0) });
   gap.addEventListener("dragover", event => { event.preventDefault() });
-  gap.addEventListener("drop", drop);
+  gap.addEventListener("drop", dropTodo);
   return gap;
 }
 
-function removeGap(iDoNothing) {
-  removeTaskId(0);
-}
-
-function drop() {
-  // Drops the dragged element in the gap
+function dropTodo() {
   const gap = document.getElementById("gap"),
         move = document.getElementById("selected"),
-        indexMove = indexById(move.dataset.id), indexGap = indexById(0),
+        indexMove = getIndexById(move.dataset.id), indexGap = getIndexById(0),
         separationIndex = firstCheckedIndex() - 1,
         switchData = {gap, move, indexGap, indexMove};
   if(separationIndex >= 0) {
@@ -224,7 +215,7 @@ function createNewNode(objective) {
   checkbox.type = "checkbox";
   checkbox.classList.add("checkbox");
   checkbox.checked = objective.check;
-  checkbox.addEventListener("change", event => { change(event.target) });
+  checkbox.addEventListener("change", event => { changeCheck(event.target) });
   label.classList.add("checkbox");
   label.appendChild(checkbox);
   task.innerText = objective.task;
@@ -234,7 +225,7 @@ function createNewNode(objective) {
   edit.addEventListener("click", event => { editTask(event.target.previousSibling) });
   remove.textContent = "remove";
   remove.classList.add("remove");
-  remove.addEventListener("click", event => { removeTaskId(event.target.parentElement.dataset.id) });
+  remove.addEventListener("click", event => { removeTodoId(event.target.parentElement.dataset.id) });
   todo.draggable = true;
   todo.dataset.id = objective.id;
   todo.classList.add("todo");
@@ -256,7 +247,7 @@ function storeTasks() {
 
 function retrieveTasks() {
   todoArray = JSON.parse(localStorage.getItem("todoArray")) || [];
-  const gapIndex = indexById(0);
+  const gapIndex = getIndexById(0);
   if(gapIndex !== -1) {
     todoArray.splice(gap, 1);
   }
