@@ -1,0 +1,76 @@
+#listContainer {
+  padding-bottom: 2vw;
+}
+
+button, input {
+  font-size: 1vw;
+}
+
+.todo {
+  padding-top: 2px;
+  padding-bottom: 4px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 17px;
+  margin-right: 61.75vw;
+  width: 37.125vw;
+  border: 1px solid #00000020;
+}
+
+.checkbox {
+  vertical-align: top;
+}
+
+.task {
+  display: inline-block;
+  vertical-align: middle;
+  width : 28vw;
+  font-size: 1.25vw;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  margin: 0px;
+}
+
+.edit {
+  position: absolute;
+  right: 67.5vw;
+  font-size: 1vw;
+  visibility: hidden;
+}
+
+.remove {
+  position: absolute;
+  right: 62.65vw;
+  font-size: 1vw;
+  visibility: hidden;
+}
+
+#hover {
+  background-color: #ff880071;
+  width: 37.125vw;
+}
+
+#hover > button {
+  visibility: visible;
+}
+
+#hover > .task {
+  word-wrap: break-word;
+  overflow: visible;
+  white-space: normal;
+}
+
+#selected {
+  background-color: #13a0e647;
+}
+
+#gap {
+  width: 37.125vw;
+  height: 30px;
+  border: 1px solid #00000020;
+  background-color: #dddddd60;
+}
+
+#gap > * {
+  visibility: hidden;
+}
